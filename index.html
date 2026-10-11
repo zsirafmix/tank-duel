@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a4a">
+<meta name="description" content="Gigászok csatája, avagy Zsolesz, és Gazi harca – kétszemélyes, körökre osztott tankos böngészőjáték folyamatosan növekvő fallal.">
+<title>GIGÁSZOK CSATÁJA – avagy Zsolesz, és Gazi harca</title>
+<link rel="icon" href="assets/images/icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- ======= FELSŐ SÁV ======= -->
+<div id="hud" class="hidden">
+  <div class="hud-player left" id="hudP0">
+    <div class="portrait-wrap"><img class="portrait" id="por0" src="assets/images/gazi_portrait.png" alt=""></div>
+    <div class="pinfo">
+      <div class="pname" id="name0">Gazi</div>
+      <div class="hpbar"><div class="hpfill" id="hp0"></div><span class="hptxt" id="hpt0">100</span></div>
+      <div class="wins" id="wins0">🏆 0</div>
+    </div>
+  </div>
+  <div class="hud-center">
+    <div class="round" id="roundLbl">1. forduló</div>
+    <div class="windbox"><span class="lbl">Szél</span><span id="windArrow" class="windArrow">➜</span><span id="windVal">0 m/s</span></div>
+    <div class="walllbl">🧱 Fal: <b id="wallLbl">1 m</b></div>
+    <div class="weather" id="weatherLbl">☀️ Napos</div>
+  </div>
+  <div class="hud-player right" id="hudP1">
+    <div class="pinfo">
+      <div class="pname" id="name1">Zsolesz</div>
+      <div class="hpbar"><div class="hpfill" id="hp1"></div><span class="hptxt" id="hpt1">100</span></div>
+      <div class="wins" id="wins1">🏆 0</div>
+    </div>
+    <div class="portrait-wrap"><img class="portrait" id="por1" src="assets/images/zsolesz_portrait.png" alt=""></div>
+  </div>
+</div>
+
+<div id="turnBanner" class="banner"></div>
+
+<!-- ======= ALSÓ VEZÉRLŐSÁV ======= -->
+<div id="controls" class="hidden">
+  <div class="turnTag" id="turnTag">Gazi lő</div>
+  <div class="ctl-group">
+    <label for="angle">Szög <b id="angVal">45°</b></label>
+    <div class="sl"><button class="adj" data-k="ang" data-v="-1" aria-label="Szög csökkentése">−</button><input type="range" id="angle" min="0" max="90" step="0.5" value="45"><button class="adj" data-k="ang" data-v="1" aria-label="Szög növelése">+</button></div>
+  </div>
+  <div class="ctl-group">
+    <label for="power">Erő <b id="powVal">60%</b></label>
+    <div class="sl"><button class="adj" data-k="pow" data-v="-1" aria-label="Erő csökkentése">−</button><input type="range" id="power" min="0" max="100" step="0.5" value="60"><button class="adj" data-k="pow" data-v="1" aria-label="Erő növelése">+</button></div>
+  </div>
+  <button id="fireBtn">TÜZELÉS!</button>
+  <div class="ctl-toggles">
+    <label><input type="checkbox" id="prevToggle" checked> Röppálya</label>
+    <label><input type="checkbox" id="lastToggle" checked> Utolsó lövés</label>
+  </div>
+  <div class="ctl-icons">
+    <button id="pauseBtn" title="Szünet (P)">⏸</button>
+    <button id="muteBtn" title="Hang (M)">🔊</button>
+  </div>
+</div>
+
+<!-- ======= FŐMENÜ ======= -->
+<div id="menu" class="screen">
+  <div class="menu-card">
+    <div class="title-art">
+      <img src="assets/images/gazi_portrait.png" class="vs-por left" alt="Gazi">
+      <div class="title-text">
+        <h1>GIGÁSZOK CSATÁJA</h1>
+        <h2>avagy <span id="tN1">ZSOLESZ</span>, és <span id="tN0">GAZI</span> harca</h2>
+      </div>
+      <img src="assets/images/zsolesz_portrait.png" class="vs-por right" alt="Zsolesz">
+    </div>
+    <div class="names">
+      <label class="nm green">🟩 Bal (zöld tank) <input id="inName0" maxlength="14" value="Gazi"></label>
+      <button id="swapNames" title="Nevek cseréje">⇄</button>
+      <label class="nm grey">⬜ Jobb (szürke tank) <input id="inName1" maxlength="14" value="Zsolesz"></label>
+    </div>
+    <div class="opt-row"><span class="opt-lbl">Ellenfél</span>
+      <div class="seg" data-opt="opponent">
+        <button data-v="human" class="on">👥 2 játékos</button>
+        <button data-v="easy">🤖 Gép – Könnyű</button>
+        <button data-v="medium">🤖 Gép – Közepes</button>
+        <button data-v="hard">🤖 Gép – Nehéz</button>
+      </div></div>
+    <div class="opt-row"><span class="opt-lbl">Játékmód</span>
+      <div class="seg" data-opt="mode">
+        <button data-v="classic" class="on">⚔️ Klasszikus</button>
+        <button data-v="endless">🧱 Végtelen fal</button>
+      </div></div>
+    <div class="opt-row"><span class="opt-lbl">Pálya</span>
+      <div class="seg" data-opt="time">
+        <button data-v="random" class="on">🎲 Véletlen</button>
+        <button data-v="day">☀️ Nappal</button>
+        <button data-v="night">🌙 Éjszaka</button>
+      </div></div>
+    <div class="opt-row"><span class="opt-lbl">Időjárás</span>
+      <div class="seg" data-opt="weather">
+        <button data-v="random" class="on">🎲 Véletlen</button>
+        <button data-v="clear">☀️ Derült</button>
+        <button data-v="clouds">☁️ Felhős</button>
+        <button data-v="rain">🌧️ Eső</button>
+        <button data-v="snow">❄️ Hó</button>
+        <button data-v="storm">⛈️ Vihar</button>
+      </div></div>
+    <div class="opt-row"><span class="opt-lbl">Röppálya-előnézet</span>
+      <div class="seg" data-opt="preview">
+        <button data-v="short" class="on">Rövid</button>
+        <button data-v="full">Teljes</button>
+        <button data-v="off">Ki</button>
+      </div></div>
+    <button id="startBtn" class="big">💥 CSATA! 💥</button>
+    <div class="scores" id="scoreBoard"></div>
+    <details class="help">
+      <summary>🎮 Irányítás és szabályok</summary>
+      <div class="help-grid">
+        <div><b>Bal játékos</b><br>A / D – szög<br>W / S – erő<br>SPACE – tüzelés</div>
+        <div><b>Jobb játékos</b><br>← / → – szög<br>↑ / ↓ – erő<br>ENTER – tüzelés</div>
+        <div><b>Egyéb</b><br>Shift – finom állítás<br>P / Esc – szünet<br>M – hang ki/be</div>
+      </div>
+      <p>Felváltva lőtök. Minden teljes forduló után <b>1 méterrel nő a fal</b> középen. Közvetlen találat: 30, közeli robbanás: 10–20, falba csapódás: 0 sebzés. Aki 0 életerőre esik, veszít. A szél minden fordulóban változik – figyeld a zászlót az antennán!</p>
+    </details>
+  </div>
+</div>
+
+<!-- ======= SZÜNET ======= -->
+<div id="pauseScr" class="screen hidden">
+  <div class="menu-card small">
+    <h1>⏸ SZÜNET</h1>
+    <button id="resumeBtn" class="big">▶ Folytatás</button>
+    <button id="restartBtn">🔁 Új játék</button>
+    <button id="toMenuBtn">🏠 Főmenü</button>
+  </div>
+</div>
+
+<!-- ======= GYŐZELEM ======= -->
+<div id="winScr" class="screen hidden">
+  <div class="menu-card win">
+    <img id="winPor" class="win-por" src="assets/images/gazi_portrait.png" alt="">
+    <h1 id="winTitle">GAZI GYŐZÖTT!</h1>
+    <p id="winQuip"></p>
+    <div id="winStats" class="win-stats"></div>
+    <button id="againBtn" class="big">🔁 Visszavágó!</button>
+    <button id="winMenuBtn">🏠 Főmenü</button>
+  </div>
+</div>
+
+<div id="rotateHint" class="hidden">
+  <div>📱↻<br>Fordítsd fekvő helyzetbe a telefont a jobb élményért!<br><button id="rotateOk">Így is jó</button></div>
+</div>
+
+<script src="js/physics.js"></script>
+<script src="js/wall.js"></script>
+<script src="js/tanks.js"></script>
+<script src="js/projectile.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
